@@ -685,6 +685,7 @@ fn activateProviderSelection(
             .gateway => "Gateway is already selected.\n",
             .codex => "Codex is already selected.\n",
             .grok => "Grok is already selected.\n",
+            .openai_compat => "OpenAI-compatible endpoint is already selected.\n",
         });
         return true;
     }
@@ -732,6 +733,7 @@ fn activateProviderSelection(
                 .codex => "Codex credential is unavailable",
                 .grok => "Grok credential is unavailable",
                 .gateway => "configure a Gateway credential first",
+                .openai_compat => "set FX_OPENAI_API_KEY (or OPENAI_API_KEY)",
             },
         );
         return false;
@@ -741,6 +743,7 @@ fn activateProviderSelection(
             .codex => "Codex model catalog is unavailable",
             .grok => "Grok model catalog is unavailable",
             .gateway => "Gateway model catalog is unavailable",
+            .openai_compat => "OpenAI-compatible model catalog is unavailable",
         });
         return false;
     };
@@ -786,12 +789,14 @@ fn activateProviderSelection(
         .codex => try writeStdout(deps, "Signed in with Codex.\n"),
         .grok => try writeStdout(deps, "Signed in with Grok.\n"),
         .gateway => unreachable,
+        .openai_compat => unreachable,
     };
     if (caller == .provider_command) {
         try writeStdout(deps, switch (target) {
             .gateway => "Provider set to Gateway.\n",
             .codex => "Provider set to Codex.\n",
             .grok => "Provider set to Grok.\n",
+            .openai_compat => "Provider set to OpenAI-compatible endpoint.\n",
         });
     }
     return true;
@@ -910,7 +915,7 @@ fn runNonInteractiveWithDeps(
         .issue => |rest| return runGithubWorkflow(alloc, rest, cfg, global_args.modifiers, deps, .issue),
         .login => |rest| {
             const maybe_login_provider = parseLoginProvider(rest) catch {
-                try writeStderr(deps, "usage: fx login [vercel|codex|grok]\n");
+                try writeStderr(deps, "usage: fx login [vercel|codex|grok|openai-compat]\n");
                 return .handled_failure;
             };
             // Preserve the original `fx login` behavior for scripts and users.
@@ -964,12 +969,16 @@ fn runNonInteractiveWithDeps(
                     }
                     try writeStdout(deps, "Signed in with Grok.\n");
                 },
+                .openai_compat => {
+                    try writeStdout(deps, "OpenAI-compatible endpoints use FX_OPENAI_API_KEY; no login is required.\n");
+                    return .handled_success;
+                },
             }
             return .handled_success;
         },
         .logout => |rest| {
             const maybe_login_provider = parseLoginProvider(rest) catch {
-                try writeStderr(deps, "usage: fx logout [vercel|codex|grok]\n");
+                try writeStderr(deps, "usage: fx logout [vercel|codex|grok|openai-compat]\n");
                 return .handled_failure;
             };
             // Preserve the original `fx logout` behavior for scripts and users.
@@ -1150,6 +1159,7 @@ fn runNonInteractiveWithDeps(
                     .gateway => "fx models: Gateway model catalog is unavailable\n",
                     .codex => "fx models: Codex model catalog is unavailable\n",
                     .grok => "fx models: Grok model catalog is unavailable\n",
+                    .openai_compat => "fx models: OpenAI-compatible model catalog is unavailable; set FX_OPENAI_BASE_URL\n",
                 });
                 return .handled_failure;
             };

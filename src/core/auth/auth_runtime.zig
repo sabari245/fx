@@ -1589,6 +1589,7 @@ pub const Runtime = struct {
                     probeCredentialSource,
                     loadRuntimeCredentialSource,
                 )),
+            .openai_compat => false,
         };
     }
 

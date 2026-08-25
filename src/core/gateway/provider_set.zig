@@ -52,12 +52,14 @@ pub const Set = struct {
     gateway: Bundle,
     codex: Bundle,
     grok: Bundle,
+    openai_compat: Bundle = .{},
 
     pub fn select(self: Set, provider: model_provider.ProviderId) Bundle {
         return switch (provider) {
             .gateway => self.gateway,
             .codex => self.codex,
             .grok => self.grok,
+            .openai_compat => self.openai_compat,
         };
     }
 
@@ -66,6 +68,7 @@ pub const Set = struct {
             .gateway = self.gateway.deferred_usage,
             .codex = self.codex.deferred_usage,
             .grok = self.grok.deferred_usage,
+            .openai_compat = self.openai_compat.deferred_usage,
         };
     }
 };

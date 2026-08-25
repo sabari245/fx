@@ -202,6 +202,7 @@ pub const missing_chatgpt_credential_message = "fx needs a Codex subscription lo
 pub const missing_chatgpt_interactive_credential_message = "Codex needs a subscription login. Run /login, open Connections, then choose Codex subscription.";
 pub const missing_grok_credential_message = "fx needs a Grok subscription login for this model. Run fx login grok.";
 pub const missing_grok_interactive_credential_message = "Grok needs a subscription login. Run /login, open Connections, then choose Grok subscription.";
+pub const missing_openai_compat_credential_message = "Set FX_OPENAI_API_KEY (or OPENAI_API_KEY) and FX_OPENAI_BASE_URL to use an OpenAI-compatible endpoint.";
 pub const unreadable_store_message = "Fx could not read the stored API key from " ++ stored_key_backend_label ++ ". A key may be saved but unreadable. Set FX_TRACE_LOG for the failing step, or set AI_GATEWAY_API_KEY.";
 
 pub const Credential = struct {
@@ -289,6 +290,10 @@ pub fn resolveForProvider(
                 .stored => try loadStoredGrokCredential(alloc),
                 .refresh_if_needed => try loadGrokCredential(alloc, transport, .if_needed),
             };
+            return .{ .credential = credential };
+        },
+        .openai_compat => {
+            const credential = try loadOpenAiCompatCredential(alloc);
             return .{ .credential = credential };
         },
         .gateway => {},
@@ -465,6 +470,17 @@ fn loadStoredKeyCredential(
     if (secret_store.isDisabled()) return null;
     const value = (try secret_store.load(alloc)) orelse return null;
     return .{ .token = value, .source = .stored_key };
+}
+
+/// An OpenAI-compatible endpoint authenticates through a plain API key supplied
+/// by the process environment. It never falls through to gateway/vercel sources.
+fn loadOpenAiCompatCredential(alloc: std.mem.Allocator) !?Credential {
+    const value = nonEmptyEnvValue("FX_OPENAI_API_KEY") orelse
+        nonEmptyEnvValue("OPENAI_API_KEY") orelse return null;
+    return .{
+        .token = try alloc.dupe(u8, value),
+        .source = .stored_key,
+    };
 }
 
 fn loadChatGptCredential(

@@ -60,6 +60,7 @@ pub fn Runtime(comptime App: type) type {
                     .codex => .chatgpt_subscription,
                     .grok => .grok_subscription,
                     .gateway => app.auth.credentialSource() orelse .fx_login,
+                    .openai_compat => .stored_key,
                 };
                 const route_change = app.auth.selectForProvider(app.alloc, provider) catch |err| switch (err) {
                     error.OutOfMemory => return err,
@@ -75,6 +76,8 @@ pub fn Runtime(comptime App: type) type {
                             credentials.missing_grok_interactive_credential_message
                         else if (provider == .codex)
                             credentials.missing_chatgpt_interactive_credential_message
+                        else if (provider == .openai_compat)
+                            credentials.missing_openai_compat_credential_message
                         else
                             credentials.missing_interactive_credential_message,
                     }, true);
@@ -1390,6 +1393,7 @@ test "interactive subscription sign-in rejects active and queued work before OAu
                 .codex => try Runtime(BusySignInApp).beginChatGptSignIn(&app),
                 .grok => try Runtime(BusySignInApp).beginGrokSignIn(&app),
                 .gateway => unreachable,
+                .openai_compat => unreachable,
             }
 
             try std.testing.expectEqual(@as(usize, 0), app.auth.start_count);

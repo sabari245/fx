@@ -37,6 +37,15 @@ pub const entries = [_]Entry{
         .description = "SuperGrok or X Premium subscription",
         .subscription = true,
     },
+    .{
+        .id = .openai_compat,
+        .slug = "openai-compat",
+        .aliases = &.{ "openai_compat", "openai-compatible", "custom", "openai" },
+        .name = "OpenAI-compatible endpoint",
+        .route_name = "OpenAI-compatible endpoint",
+        .description = "Any OpenAI-compatible server via FX_OPENAI_BASE_URL",
+        .subscription = false,
+    },
 };
 
 pub fn parse(value: []const u8) ?model_provider.ProviderId {
@@ -61,6 +70,8 @@ test "auth provider catalog uses the model provider identity and explicit aliase
     try std.testing.expectEqual(model_provider.ProviderId.gateway, parse("gateway").?);
     try std.testing.expectEqual(model_provider.ProviderId.codex, parse("codex").?);
     try std.testing.expectEqual(model_provider.ProviderId.grok, parse("grok").?);
+    try std.testing.expectEqual(model_provider.ProviderId.openai_compat, parse("openai-compat").?);
+    try std.testing.expectEqual(model_provider.ProviderId.openai_compat, parse("custom").?);
     try std.testing.expect(parse("openai-codex") == null);
     try std.testing.expect(parse("chatgpt") == null);
     try std.testing.expect(parse("unknown") == null);
